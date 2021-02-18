@@ -1,7 +1,7 @@
-# Ping Pong
+# Ping-Pong
 
-* Take a trip down memory lane with this classic game of Ping Pong.
-* Play against the computer and try to outsmart its artificial intelligence.
+* take trip down memory-lane with this classic game of Ping-Pong
+* play against computer and try outSmart its artificial-intelligence
 
 ## Stack
 
