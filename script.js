@@ -260,7 +260,7 @@ function gameOver() {
 };
 
 function animate() {
-	if (isReferee) {
+	if (isSinglePlayer || isReferee) {
 		ballMove();
 		ballBoundaries();
 	};
@@ -317,7 +317,7 @@ function loadGame(gameMode) {
 
 // start game
 function startGame() {
-	paddleIndex = isReferee ? 0 : 1;
+	paddleIndex = isSinglePlayer ? 0 : isReferee ? 0 : 1;
 
 	animate();
 
