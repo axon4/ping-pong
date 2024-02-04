@@ -8,6 +8,7 @@ const screenWidth = window.screen.width;
 const canvasPosition = (screenWidth / 2) - (width / 2);
 const isMobile = window.matchMedia('(max-width: 600px)');
 const gameOverElement = document.createElement('div');
+let isSinglePlayer;
 
 // paddle
 const paddleHeight = 10;
@@ -45,7 +46,41 @@ let playerScore = 0;
 let computerScore = 0;
 const winningScore = 7;
 let isGameOver = true;
-let isNewGame = true;
+// let isNewGame = false;
+
+function renderGameMode() {
+	canvas.hidden = true;
+	gameOverElement.textContent = '';
+	gameOverElement.classList.add('game-over-container');
+
+	const title = document.createElement('h1');
+	title.textContent = 'Ping-Pong';
+
+	const singlePlayerButton = document.createElement('button');
+	singlePlayerButton.setAttribute('onclick', 'startGame("single")');
+	singlePlayerButton.style.margin = '8px 0';
+	singlePlayerButton.textContent = 'Single-Player';
+
+	const multiPlayerButton = document.createElement('button');
+	multiPlayerButton.setAttribute('onclick', 'startGame("multi")');
+	multiPlayerButton.style.margin = '8px 0';
+	multiPlayerButton.textContent = 'Multi-Player';
+
+	gameOverElement.append(title, singlePlayerButton, multiPlayerButton);
+	body.appendChild(gameOverElement);
+};
+
+function renderWaiting() {
+	// canvas backGround
+	conText.fillStyle = 'black';
+	conText.fillRect(0, 0, width, height);
+
+	// waiting-text
+	conText.fillStyle = 'white';
+	conText.font = '32px Courier New';
+	conText.fillText('awaiting opponent...', 20, (canvas.height / 2) - 30);
+	conText.fillText('connecting to socket...', 20, (canvas.height / 2) - 60);
+};
 
 function renderCanvas() {
 	// canvas backGround
@@ -131,7 +166,8 @@ function ballBoundaries() {
 				// maximum speed
 				if (speedY < -5) {
 					speedY = -5;
-					computerSpeed = 6;
+
+					if (isSinglePlayer) computerSpeed = 6;
 				};
 			};
 
@@ -183,13 +219,10 @@ function showGameOverElement(winner) {
 	gameOverElement.classList.add('game-over-container');
 
 	const title = document.createElement('h1');
-
 	title.textContent = `${winner} Win${winner === 'You' ? '' : 's'}`;
 
 	const playAgainButton = document.createElement('button');
-
-	playAgainButton.setAttribute('onclick', 'startGame()');
-
+	playAgainButton.setAttribute('onclick', 'startGame("single")');
 	playAgainButton.textContent = 'RePlay';
 
 	gameOverElement.append(title, playAgainButton);
@@ -210,8 +243,9 @@ function animate() {
 	renderCanvas();
 	ballMove();
 	ballBoundaries();
-	computerAI();
 	gameOver();
+
+	if (isSinglePlayer) computerAI();
 
 	if (!gameOver()) {
 		window.requestAnimationFrame(animate);
@@ -219,19 +253,24 @@ function animate() {
 };
 
 // start game, reSet everyThing
-function startGame() {
-	if (isGameOver && !isNewGame) {
+function startGame(gameMode) {
+	isSinglePlayer = gameMode === 'single';
+
+	if (isGameOver /* && !isNewGame */) {
 		body.removeChild(gameOverElement);
 
 		canvas.hidden = false;
 	};
 
 	isGameOver = false;
-	isNewGame = false;
+	// isNewGame = false;
 	playerScore = 0;
 	computerScore = 0;
 	ballReSet();
 	createCanvas();
+
+	if (!isSinglePlayer) renderWaiting();
+
 	animate();
 
 	canvas.addEventListener('mousemove', event => {
@@ -253,4 +292,4 @@ function startGame() {
 };
 
 // upOn-load
-startGame();
+renderGameMode();
