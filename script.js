@@ -254,31 +254,29 @@ function animate() {
 	};
 };
 
-function establishWebSocket() {
-	socket = io('http://localhost:3001');
-
-	socket.on('connect', () => {
-		console.log('connected to server as:', socket.id);
-	});
-
-	socket.on('start', refereeID => {
-		console.log('referee:', refereeID);
-
-		isReferee = socket.id === refereeID;
-
-		startGame();
-	});
-
-	socket.emit('ready');
-};
-
 // load game, reSet everyThing
 function loadGame(gameMode) {
 	if (gameMode === 'single') {
 		isSinglePlayer = true;
 
 		startGame();
-	} else establishWebSocket();
+	} else {
+		socket = io('http://localhost:3001');
+
+		socket.on('connect', () => {
+			console.log('connected to server as:', socket.id);
+		});
+
+		socket.on('start', refereeID => {
+			console.log('referee:', refereeID);
+
+			isReferee = socket.id === refereeID;
+
+			startGame();
+		});
+
+		socket.emit('ready');
+	};
 
 	if (isGameOver /* && !isNewGame */) {
 		body.removeChild(gameOverElement);
@@ -317,7 +315,19 @@ function startGame() {
 
 		// hide cursor
 		canvas.style.cursor = 'none';
+
+		if (!isSinglePlayer) {
+			socket.emit('paddleMove', {x: paddleX[paddleIndex]});
+		};
 	});
+
+	if (!isSinglePlayer) {
+		socket.on('paddleMove', paddle => {
+			const opponentPaddleIndex = 1 - paddleIndex;
+
+			paddleX[opponentPaddleIndex] = paddle.x;
+		});
+	};
 };
 
 // upOn-load

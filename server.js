@@ -21,6 +21,10 @@ IO.on('connection', socket => {
 			IO.emit('start', socket.id);
 		};
 	});
+
+	socket.on('paddleMove', paddle => {
+		socket.broadcast.emit('paddleMove', paddle);
+	});
 });
 
 server.listen(PORT, () => {console.log(`server listening on port: ${PORT}`)});
