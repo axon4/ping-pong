@@ -9,6 +9,7 @@ const canvasPosition = (screenWidth / 2) - (width / 2);
 const isMobile = window.matchMedia('(max-width: 600px)');
 const gameOverElement = document.createElement('div');
 let isSinglePlayer;
+let socket;
 
 // paddle
 const paddleHeight = 10;
@@ -254,7 +255,11 @@ function animate() {
 
 // start game, reSet everyThing
 function startGame(gameMode) {
-	isSinglePlayer = gameMode === 'single';
+	if (gameMode === 'single') {
+		isSinglePlayer = true;
+	} else {
+		socket = io('http://localhost:3001');
+	};
 
 	if (isGameOver /* && !isNewGame */) {
 		body.removeChild(gameOverElement);

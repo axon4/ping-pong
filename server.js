@@ -1,5 +1,10 @@
 const server = require('http').createServer();
-const IO = require('socket.io')(server);
+const IO = require('socket.io')(server, {
+	cors: {
+		origin: '*',
+		methods: ['GET', 'POST']
+	}
+});
 
 const PORT = 3001;
 

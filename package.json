@@ -1,7 +1,13 @@
 {
 	"name": "ping-pong",
 	"version": "0.0.1",
+	"scripts": {
+		"dev": "nodemon server.js"
+	},
 	"dependencies": {
 		"socket.io": "^4.7.4"
+	},
+	"devDependencies": {
+		"nodemon": "^3.0.3"
 	}
 }
