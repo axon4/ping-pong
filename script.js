@@ -282,7 +282,7 @@ function loadGame(gameMode) {
 
 		startGame();
 	} else {
-		socket = io('http://localhost:3001');
+		socket = io();
 
 		socket.on('connect', () => {
 			console.log('connected to server as:', socket.id);
