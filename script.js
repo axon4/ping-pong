@@ -282,7 +282,7 @@ function loadGame(gameMode) {
 
 		startGame();
 	} else {
-		socket = io();
+		socket = io('/ping-pong');
 
 		socket.on('connect', () => {
 			console.log('connected to server as:', socket.id);

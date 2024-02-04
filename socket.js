@@ -1,7 +1,9 @@
 let readyPlayers = 0;
 
 function listen(IO) {
-	IO.on('connection', socket => {
+	const nameSpace = IO.of('/ping-pong');
+
+	nameSpace.on('connection', socket => {
 		console.log('client connected:', socket.id);
 
 		socket.on('ready', () => {
@@ -10,7 +12,7 @@ function listen(IO) {
 			readyPlayers++;
 
 			if (readyPlayers % 2 === 0) {
-				IO.emit('start', socket.id);
+				nameSpace.emit('start', socket.id);
 			};
 		});
 
