@@ -25,6 +25,10 @@ IO.on('connection', socket => {
 	socket.on('paddleMove', paddle => {
 		socket.broadcast.emit('paddleMove', paddle);
 	});
+
+	socket.on('ballMove', ball => {
+		socket.broadcast.emit('ballMove', ball);
+	});
 });
 
 server.listen(PORT, () => {console.log(`server listening on port: ${PORT}`)});

@@ -45,7 +45,7 @@ if (isMobile.matches) {
 
 // score
 let playerScore = 0;
-let computerScore = 0;
+let opponentScore = 0;
 const winningScore = 7;
 let isGameOver = true;
 // let isNewGame = false;
@@ -115,7 +115,7 @@ function renderCanvas() {
 	// score
 	conText.font = '32px Courier New';
 	conText.fillText(playerScore, 20, canvas.height / 2 + 50);
-	conText.fillText(computerScore, 20, canvas.height / 2 - 30);
+	conText.fillText(opponentScore, 20, canvas.height / 2 - 30);
 };
 
 function createCanvas() {
@@ -131,6 +131,15 @@ function ballReSet() {
 	ballY = height / 2;
 	speedY = -3;
 	paddleConTact = false;
+
+	if (!isSinglePlayer) {
+		socket.emit('ballMove', {
+			x: ballX,
+			y: ballY,
+			playerScore,
+			opponentScore
+		});
+	};
 };
 
 // adjust ball-movement
@@ -141,6 +150,15 @@ function ballMove() {
 	// horizontal-speed
 	if (playerMoved && paddleConTact) {
 		ballX += speedX;
+	};
+
+	if (!isSinglePlayer) {
+		socket.emit('ballMove', {
+			x: ballX,
+			y: ballY,
+			playerScore,
+			opponentScore
+		});
 	};
 };
 
@@ -179,7 +197,7 @@ function ballBoundaries() {
 		} else if (ballY > height) {
 			// reSet ball, add to computer-score
 			ballReSet();
-			computerScore++;
+			opponentScore++;
 		};
 	};
 
@@ -232,7 +250,7 @@ function showGameOverElement(winner) {
 };
 
 function gameOver() {
-	if (playerScore === winningScore || computerScore === winningScore) {
+	if (playerScore === winningScore || opponentScore === winningScore) {
 		isGameOver = true;
 
 		const winner = playerScore === winningScore ? 'You' : 'Computer';
@@ -242,9 +260,12 @@ function gameOver() {
 };
 
 function animate() {
+	if (isReferee) {
+		ballMove();
+		ballBoundaries();
+	};
+
 	renderCanvas();
-	ballMove();
-	ballBoundaries();
 	gameOver();
 
 	if (isSinglePlayer) computerAI();
@@ -287,7 +308,7 @@ function loadGame(gameMode) {
 	isGameOver = false;
 	// isNewGame = false;
 	playerScore = 0;
-	computerScore = 0;
+	opponentScore = 0;
 	ballReSet();
 	createCanvas();
 
@@ -326,6 +347,10 @@ function startGame() {
 			const opponentPaddleIndex = 1 - paddleIndex;
 
 			paddleX[opponentPaddleIndex] = paddle.x;
+		});
+
+		socket.on('ballMove', ball => {
+			({ x: ballX, y: ballY, playerScore, opponentScore } = ball);
 		});
 	};
 };
