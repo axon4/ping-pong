@@ -10,13 +10,14 @@ const isMobile = window.matchMedia('(max-width: 600px)');
 const gameOverElement = document.createElement('div');
 let isSinglePlayer;
 let socket;
+let isReferee = false;
 
 // paddle
 const paddleHeight = 10;
 const paddleWidth = 50;
 const paddleDifference = 25;
-let paddleBottomX = 225;
-let paddleTopX = 225;
+let paddleX = [255, 255];
+let paddleIndex = 0;
 let playerMoved = false;
 let paddleConTact = false;
 
@@ -58,12 +59,12 @@ function renderGameMode() {
 	title.textContent = 'Ping-Pong';
 
 	const singlePlayerButton = document.createElement('button');
-	singlePlayerButton.setAttribute('onclick', 'startGame("single")');
+	singlePlayerButton.setAttribute('onclick', 'loadGame("single")');
 	singlePlayerButton.style.margin = '8px 0';
 	singlePlayerButton.textContent = 'Single-Player';
 
 	const multiPlayerButton = document.createElement('button');
-	multiPlayerButton.setAttribute('onclick', 'startGame("multi")');
+	multiPlayerButton.setAttribute('onclick', 'loadGame("multi")');
 	multiPlayerButton.style.margin = '8px 0';
 	multiPlayerButton.textContent = 'Multi-Player';
 
@@ -92,10 +93,10 @@ function renderCanvas() {
 	conText.fillStyle = 'white';
 
 	// player-paddle (bottom)
-	conText.fillRect(paddleBottomX, height - 20, paddleWidth, paddleHeight);
+	conText.fillRect(paddleX[0], height - 20, paddleWidth, paddleHeight);
 
-	// computer-paddle (top)
-	conText.fillRect(paddleTopX, 10, paddleWidth, paddleHeight);
+	// computer/opponent paddle (top)
+	conText.fillRect(paddleX[1], 10, paddleWidth, paddleHeight);
 
 	// dashed--centre-line
 	conText.beginPath();
@@ -157,7 +158,7 @@ function ballBoundaries() {
 
 	// bounce-off player-paddle (bottom)
 	if (ballY > height - paddleDifference) {
-		if (ballX > paddleBottomX && ballX < paddleBottomX + paddleWidth) {
+		if (ballX > paddleX[0] && ballX < paddleX[0] + paddleWidth) {
 			paddleConTact = true;
 
 			// add speed on-hit
@@ -173,7 +174,7 @@ function ballBoundaries() {
 			};
 
 			speedY = -speedY;
-			trajectoryX = ballX - (paddleBottomX + paddleDifference);
+			trajectoryX = ballX - (paddleX[0] + paddleDifference);
 			speedX = trajectoryX * 0.3;
 		} else if (ballY > height) {
 			// reSet ball, add to computer-score
@@ -182,9 +183,9 @@ function ballBoundaries() {
 		};
 	};
 
-	// bounce-off computer-paddle (top)
+	// bounce-off computer/opponent paddle (top)
 	if (ballY < paddleDifference) {
-		if (ballX > paddleTopX && ballX < paddleTopX + paddleWidth) {
+		if (ballX > paddleX[1] && ballX < paddleX[1] + paddleWidth) {
 			// add speed on-hit
 			if (playerMoved) {
 				speedY += 1;
@@ -206,10 +207,10 @@ function ballBoundaries() {
 
 function computerAI() {
 	if (playerMoved) {
-		if (paddleTopX + paddleDifference < ballX) {
-			paddleTopX += computerSpeed;
+		if (paddleX[1] + paddleDifference < ballX) {
+			paddleX[1] += computerSpeed;
 		} else {
-			paddleTopX -= computerSpeed;
+			paddleX[1] -= computerSpeed;
 		};
 	};
 };
@@ -223,7 +224,7 @@ function showGameOverElement(winner) {
 	title.textContent = `${winner} Win${winner === 'You' ? '' : 's'}`;
 
 	const playAgainButton = document.createElement('button');
-	playAgainButton.setAttribute('onclick', 'startGame("single")');
+	playAgainButton.setAttribute('onclick', 'loadGame("single")');
 	playAgainButton.textContent = 'RePlay';
 
 	gameOverElement.append(title, playAgainButton);
@@ -253,13 +254,31 @@ function animate() {
 	};
 };
 
-// start game, reSet everyThing
-function startGame(gameMode) {
+function establishWebSocket() {
+	socket = io('http://localhost:3001');
+
+	socket.on('connect', () => {
+		console.log('connected to server as:', socket.id);
+	});
+
+	socket.on('start', refereeID => {
+		console.log('referee:', refereeID);
+
+		isReferee = socket.id === refereeID;
+
+		startGame();
+	});
+
+	socket.emit('ready');
+};
+
+// load game, reSet everyThing
+function loadGame(gameMode) {
 	if (gameMode === 'single') {
 		isSinglePlayer = true;
-	} else {
-		socket = io('http://localhost:3001');
-	};
+
+		startGame();
+	} else establishWebSocket();
 
 	if (isGameOver /* && !isNewGame */) {
 		body.removeChild(gameOverElement);
@@ -275,20 +294,25 @@ function startGame(gameMode) {
 	createCanvas();
 
 	if (!isSinglePlayer) renderWaiting();
+};
+
+// start game
+function startGame() {
+	paddleIndex = isReferee ? 0 : 1;
 
 	animate();
 
 	canvas.addEventListener('mousemove', event => {
 		playerMoved = true;
 		// compensate for canvas being centred
-		paddleBottomX = event.clientX - canvasPosition - paddleDifference;
+		paddleX[paddleIndex] = event.clientX - canvasPosition - paddleDifference;
 
-		if (paddleBottomX < paddleDifference) {
-			paddleBottomX = 0;
+		if (paddleX[paddleIndex] < paddleDifference) {
+			paddleX[paddleIndex] = 0;
 		};
 
-		if (paddleBottomX > width - paddleWidth) {
-			paddleBottomX = width - paddleWidth;
+		if (paddleX[paddleIndex] > width - paddleWidth) {
+			paddleX[paddleIndex] = width - paddleWidth;
 		};
 
 		// hide cursor
