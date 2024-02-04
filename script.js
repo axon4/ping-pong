@@ -242,7 +242,7 @@ function showGameOverElement(winner) {
 	title.textContent = `${winner} Win${winner === 'You' ? '' : 's'}`;
 
 	const playAgainButton = document.createElement('button');
-	playAgainButton.setAttribute('onclick', 'loadGame("single")');
+	playAgainButton.setAttribute('onclick', 'window.location.reload()'); // CBA to fix state
 	playAgainButton.textContent = 'RePlay';
 
 	gameOverElement.append(title, playAgainButton);
@@ -253,7 +253,7 @@ function gameOver() {
 	if (playerScore === winningScore || opponentScore === winningScore) {
 		isGameOver = true;
 
-		const winner = playerScore === winningScore ? 'You' : 'Computer';
+		const winner = playerScore === winningScore ? (isSinglePlayer ? 'You' : 'Bottom') : (isSinglePlayer ? 'Computer' : 'Top');
 
 		showGameOverElement(winner);
 	};
