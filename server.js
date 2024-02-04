@@ -10,14 +10,14 @@ const PORT = 3001;
 let readyPlayers = 0;
 
 IO.on('connection', socket => {
-	console.log('user connected:', socket.id);
+	console.log('client connected:', socket.id);
 
 	socket.on('ready', () => {
 		console.log('player ready:', socket.id);
 
 		readyPlayers++;
 
-		if (readyPlayers === 2) {
+		if (readyPlayers % 2) {
 			IO.emit('start', socket.id);
 		};
 	});
@@ -28,6 +28,10 @@ IO.on('connection', socket => {
 
 	socket.on('ballMove', ball => {
 		socket.broadcast.emit('ballMove', ball);
+	});
+
+	socket.on('disconnect', reason => {
+		console.log(`client ${socket.id} disconnected: ${reason}`);
 	});
 });
 
